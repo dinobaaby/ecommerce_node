@@ -13,8 +13,10 @@ app.use(compression());
 
 
 // init db
+require('./dbs/init.mongodb')
+const {checkOverLoad} = require('./helpers/check.connect')
 
-
+checkOverLoad()
 // init routes
 
 app.get('/', (req, res, next) => {
