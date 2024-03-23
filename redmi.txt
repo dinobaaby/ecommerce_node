@@ -9,7 +9,14 @@ section 2:
 
     helmet: bảo vệ thông tin riêng tư
 
-    conpression
+    conpression : catch data
 
 section 3:
+    connect db
+        dbs > init 
+        helpers > check.connect
+
+section 4:
+    config .env
+
     
