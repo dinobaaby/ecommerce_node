@@ -52,7 +52,7 @@ const createTokenPair = async (payload, publicKey, privateKey) =>{
 const authentication = asyncHandler(async (req, res, next) => {
     try {
         const userId = req.headers[HEADER.CLIENT_ID];
-        if (!userId) throw new AuthFailureError('Invalid Request');
+        if (!userId) throw new AuthFailureError('Invalid Request User ID');
 
         const keyStore = await findByUserId(userId);
         if (!keyStore) throw new AuthNotFound('Not Found KeyStore');
@@ -76,7 +76,7 @@ const authentication = asyncHandler(async (req, res, next) => {
 const authenticationV2 = asyncHandler(async (req, res, next) => {
     try {
         const userId = req.headers[HEADER.CLIENT_ID];
-        if (!userId) throw new AuthFailureError('Invalid Request');
+        if (!userId) throw new AuthFailureError('Invalid Request User id');
 
         const keyStore = await findByUserId(userId);
         if (!keyStore) throw new AuthNotFound('Not Found KeyStore');
