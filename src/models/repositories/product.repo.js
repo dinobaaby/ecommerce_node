@@ -1,11 +1,13 @@
 'use strict';
 
 
+const { getSelectData, unGetSelectData, convertToObjectIdMongodb } = require('../../utils');
 const {
-    product,
-     electronic,
-      clothing, 
-      furniture
+        product,
+        electronic,
+        clothing, 
+        furniture,
+
     } = require('../product.model');
 const mongoose = require('mongoose')
 
@@ -56,6 +58,10 @@ const findAllPublishForShop = async({query, limit, skip}) =>{
 }
 
 
+const findProduct = async ({ product_id, unSelect}) =>{
+    return await product.findById(product_id).select(unGetSelectData(unSelect));
+}
+
 const queryProduct = async({query, limit, skip}) =>{
     return await product.find(query)
         .populate('product_shop', 'name email -_id')
@@ -66,6 +72,20 @@ const queryProduct = async({query, limit, skip}) =>{
         .exec();
 }
 
+const findAllProducts = async({limit, sort, page, filter, select}) =>{
+    const skip =(page - 1) * limit;
+    const sortBy = sort === "ctime" ? {_id: -1} : {_id: 1};
+    const products = 
+            await product.find(filter)
+            .sort(sortBy)
+            .skip(skip)
+            .limit(limit)
+            .select(getSelectData(select))
+            .lean()
+
+    return products;
+
+}
 
 const searchProducts = async ({ keySearch }) => {
     const regexSearch = new RegExp(keySearch);
@@ -80,10 +100,47 @@ const searchProducts = async ({ keySearch }) => {
 }
 
 
+const updateproductById = async ({
+    productId,
+    bodyUpdate,
+    model,
+    isNew = true
+}) =>{
+    return await model.findByIdAndUpdate(productId, bodyUpdate, {
+        new: isNew,
+        
+    })
+
+}
+
+const getProductById = async (productId) =>{
+    return await product.findOne({_id: convertToObjectIdMongodb(productId)})
+}
+
+
+const checkProduct = async (products) =>{
+    return await Promise.all(
+        products.map( async product => {
+            const foundProduct = await getProductById(product.productId)
+            if (foundProduct) {
+                return {
+                    price: foundProduct.product_price,
+                    quantity: product.quantity,
+                    productId: product.productId
+                }
+            }
+        })
+    )
+}
 module.exports = {
     findAllDraftsForShop,
     publishProductByShop,
     findAllPublishForShop,
     unPublishProductByShop,
-    searchProducts
+    searchProducts,
+    findAllProducts,
+    findProduct,
+    updateproductById,
+    getProductById,
+    checkProduct
 }

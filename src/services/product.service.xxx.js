@@ -10,8 +10,14 @@ const {
       publishProductByShop ,
       findAllPublishForShop,
       unPublishProductByShop,
-      searchProducts
+      searchProducts,
+      findAllProducts,
+      findProduct,
+      updateproductById
     } = require('../models/repositories/product.repo');
+const { removeUnderfinedObject, updateNestedObjectParser } = require('../utils');
+const inventoryModel = require('../models/inventory.model');
+const { insertInventory } = require('../models/repositories/inventory.repo');
 
 
 // define Factory class to create product
@@ -35,6 +41,14 @@ class ProductFactory{
         const productClass = ProductFactory.productRegistry[type];
         if(!productClass) throw new BadRequestError(`Invalid product Types ${type}`);
         return new productClass(payload).createProduct();
+    }
+
+
+    static async updateProduct(type, productId, payload) {
+        const productClass = ProductFactory.productRegistry[type]
+        if (!productClass) throw new BusinessLogicError(i18n.translate('messages.error006', type))
+
+        return new productClass(payload).updateProduct(productId)
     }
 
 
@@ -68,6 +82,19 @@ class ProductFactory{
     }
 
 
+    static async findAllProducts ({limit = 50, sort= 'ctime', page = 1, filter = {isPublished: true}}){
+        return await findAllProducts({limit, sort, filter, page, 
+            select:['product_name', 'product_price', 'product_thumb', 'product_shop']
+        })
+    }
+
+    static async findProduct ({product_id}){
+        return await findProduct({product_id, unSelect: ['__v']})
+
+    }
+
+    
+
 }
 
 
@@ -96,10 +123,27 @@ class Product{
 
     // create new product
     async createProduct(product_id){
-        return await product.create({
+        const newProduct =  await product.create({
             ...this,
             _id: product_id
         })
+        if(newProduct){
+            // add product stock in inventory collection
+            await insertInventory({
+                product_id: newProduct._id,
+                shopId: this.product_shop,
+                stock: this.product_quantity
+            })
+
+        }
+
+        return newProduct;
+    }
+
+    // update product
+
+    async updateProduct(productId, bodyUpdate){
+        return await updateproductById({productId, bodyUpdate, model:product});
     }
 }
 
@@ -114,6 +158,30 @@ class Clothing extends Product{
         if(!newProduct) throw new BadRequestError("Create a new product error");
 
         return newProduct;
+    }
+
+    async updateProduct( productId ){
+        /**
+         *  {
+                *  a: undefined
+                * b: null
+         * }
+         * 
+         */
+
+        // 1. remove attributes has null or undefined
+        // 2. check update where
+        const objectParams = this;
+
+        if(objectParams.product_attributes){
+            await updateproductById({productId, objectParams, model:clothing});
+
+        }
+
+        const updateproduct = await super.updateProduct(productId, objectParams);
+
+        return updateproduct;
+   
     }
 
     
@@ -134,6 +202,29 @@ class Electronics extends Product{
 
         return newProduct;
     }
+    async updateProduct( productId ){
+        /**
+         *  {
+                *  a: undefined
+                * b: null
+         * }
+         * 
+         */
+
+        // 1. remove attributes has null or undefined
+        // 2. check update where
+        const objectParams = this;
+
+        if(objectParams.product_attributes){
+            await updateproductById({productId, objectParams, model:electronic});
+
+        }
+
+        const updateproduct = await super.updateProduct(productId, objectParams);
+
+        return updateproduct;
+   
+    }
 }
 
 class Furnitures extends Product{
@@ -150,6 +241,24 @@ class Furnitures extends Product{
         if(!newProduct) throw new BadRequestError("Create a new product error");
 
         return newProduct;
+    }
+    async updateProduct( productId ){
+
+        const objectParams = removeUnderfinedObject(this);
+
+        if(objectParams.product_attributes){
+            await updateproductById({
+                    productId,
+                    bodyUpdate: updateNestedObjectParser(objectParams),
+                    model:furniture
+                });
+
+        }
+
+        const updateproduct = await super.updateProduct(productId, updateNestedObjectParser(objectParams));
+
+        return updateproduct;
+   
     }
 }
 

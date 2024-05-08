@@ -23,6 +23,15 @@ class ProductController {
             })
         })
     }
+    
+
+    //update product
+    updateProduct = async (req, res, next) => {
+        return res.status(200).json({
+            message: 'Udpate Product Success',
+            metadata: await ProductServiceV2.updateProduct(req.body.product_type, req.params.productId,{...req.body, product_shop: req.user.userId})
+        })
+    }
 
     publishProductByShop = async(req, res, next) =>{
         return res.status(201).json({
@@ -83,6 +92,23 @@ class ProductController {
         return res.status(200).json({
             message: "Get List product successfully",
             metadata: await ProductServiceV2.searchProducts(req.params)
+        });
+    }
+
+
+    findAllProducts = async (req, res, next) => {
+        return res.status(200).json({
+            message: "Find all product successfully",
+            metadata: await ProductServiceV2.findAllProducts(req.query)
+        });
+    }
+
+    findProduct = async (req, res, next) => {
+        return res.status(200).json({
+            message: "Find all product successfully",
+            metadata: await ProductServiceV2.findProduct({
+                product_id: req.params.product_id
+            })
         });
     }
     // End Query //

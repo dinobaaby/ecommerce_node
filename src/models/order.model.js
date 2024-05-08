@@ -1,0 +1,66 @@
+'use strict'
+
+const { update } = require("lodash")
+const { default: mongoose } = require("mongoose")
+
+
+const DOCUMENT_NAME = "Order"
+const COLLECTION_NAME = "Orders"
+
+
+const orderScheme = new mongoose.Schema({
+    order_userId: {
+        type:Number,
+        required: true
+    },
+    order_checkout:{
+        type:Object,
+        default:{}
+    },
+    /*
+        order_checkout = {
+            totalPrice,
+            totalApplyDiscount,
+            feeShip
+        }
+     */
+    order_shipping:{
+        type:Object,
+        default:{}
+    },
+    /*
+        street
+        city
+        state
+        country
+     */
+    order_payment:{
+        type:Object,
+        default:{}
+    },
+    order_products:{
+        type:Array,
+        required: true
+    },
+    order_trackingNumber:{
+        type:String,
+        default: '#0001'
+    },
+    order_status:{
+        type:String,
+        enum: ['pending', 'confirmed', 'shipped', 'canclled', 'delivered'],
+        default: 'pending'
+    }
+
+},{
+    collection: COLLECTION_NAME,
+    timestamps: {
+        createdAt: 'createdOn',
+        updatedAt: 'modifiedOn'
+    }
+});
+
+
+module.exports = {
+    order: mongoose.model(DOCUMENT_NAME, orderScheme)
+}
