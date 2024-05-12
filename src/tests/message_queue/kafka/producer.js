@@ -10,7 +10,7 @@ const runProducer = async () => {
     await producer.connect();
     await producer.send({
         topic: "test-topic",
-        messages: [{ value: "Hello KafkaJS By Dinobabayy" }],
+        messages: [{ value: "Hello KafkaJS By Dinobabayy !" }],
     });
 
     await producer.disconnect();

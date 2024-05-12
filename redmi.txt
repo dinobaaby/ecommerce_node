@@ -21,3 +21,5 @@ section 4:
 
     
 link git: https://github.com/duyhoangptit/ecommerce-backend
+
+kafka config docker : https://www.confluent.io/blog/kafka-client-cannot-connect-to-broker-on-aws-on-docker-etc/
