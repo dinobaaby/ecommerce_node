@@ -1,6 +1,6 @@
 const amqp = require("amqplib");
 
-const messages = "Hello Dinobaby";
+const messages = "DinoooooBaby";
 
 const runProducer = async () => {
     try {
@@ -16,6 +16,11 @@ const runProducer = async () => {
         //  send message to the consumer
         channel.sendToQueue(queueName, Buffer.from(messages));
         console.log(`Producer send message: ${messages}`);
+
+        setTimeout(() => {
+            connection.close();
+            process.exit(0);
+        }, 500);
     } catch (err) {
         console.log(err);
     }
