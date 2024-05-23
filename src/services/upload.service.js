@@ -1,25 +1,76 @@
 "use strict";
+
 const cloudinary = require("../configs/cloudinary.config");
-const { s3, PutObjectCommand } = require("../configs/s3.config");
-const crypto = require("node:crypto");
+const {
+    s3,
+    PutObjectCommand,
+    GetObjectCommand,
+    DeleteObjectCommand,
+} = require("../configs/s3.config");
+
+const { randomImageName } = require("../utils/index");
+//const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+
+const {
+    getSignedUrl,
+    getSignedCookies,
+} = require("@aws-sdk/cloudfront-signer");
+const urlImagePublic = "https://d3hcq5nokx6dq7.cloudfront.net";
 /// Upload file using amazon web service s3 ///
 const uploadImageFromLocalS3 = async ({ file }) => {
     try {
-        const randomImageName = () => crypto.randomBytes(16).toString("hex");
+        const imageName = randomImageName();
         const command = new PutObjectCommand({
             Bucket: process.env.AWS_BUCKET_NAME,
-            Key: randomImageName() || "unknown",
+            Key: imageName || "unknown",
             Body: file.buffer,
             ContentType: "image/jpeg",
         });
 
-        const reult = await s3.send(command);
-        console.log(reult);
-        return reult;
+        // export url
+
+        const result = await s3.send(command);
+        console.log(result);
+
+        // const singedUrl = new GetObjectCommand({
+        //     Bucket: process.env.AWS_BUCKET_NAME,
+        //     Key: imageName,
+        // });
+        //const url = await getSignedUrl(s3, singedUrl, { expiresIn: 3600 });
+
+        // have cloudfront url export
+
+        const url = getSignedUrl({
+            url: ` ${urlImagePublic}/${imageName}`,
+            keyPairId: process.env.CLOUD_FRONT_PUBLIC_KEY,
+            dateLessThan: new Date(Date.now() + 60 * 1000),
+            privateKey: process.env.CLOUD_FRONT_PRIVATE_KEY,
+        });
+
+        return {
+            url,
+            result,
+        };
     } catch (err) {
         console.log(`Upload image from local error using s3client: ${err}`);
     }
 };
+
+const getImageUrlFromS3 = async ({ url }) => {
+    try {
+        const cookies = getSignedUrl({
+            url,
+            keyPairId: process.env.CLOUD_FRONT_PUBLIC_KEY,
+            dateLessThan: new Date(Date.now() + 60 * 1000),
+            privateKey: process.env.CLOUD_FRONT_PRIVATE_KEY,
+        });
+
+        return cookies;
+    } catch (err) {
+        console.log(`Error getting image from S3: ${err}`);
+    }
+};
+
 /// End upload file using amazon web service s3 ///
 // 1. Upload from url image
 
@@ -97,4 +148,5 @@ module.exports = {
     uploadImageFromLocal,
     uploadImageFromLocalFiles,
     uploadImageFromLocalS3,
+    getImageUrlFromS3,
 };

@@ -2,52 +2,53 @@
 
 const _ = require("lodash");
 const { default: mongoose, Types } = require("mongoose");
-
+const crypto = require("node:crypto");
 const getInfoData = ({ fileds = [], object = {} }) => {
-  return _.pick(object, fileds);
+    return _.pick(object, fileds);
 };
 
 const getSelectData = (select = []) => {
-  return Object.fromEntries(select.map((el) => [el, 1]));
+    return Object.fromEntries(select.map((el) => [el, 1]));
 };
 
 const unGetSelectData = (select = []) => {
-  return Object.fromEntries(select.map((el) => [el, 0]));
+    return Object.fromEntries(select.map((el) => [el, 0]));
 };
 
 const removeUnderfinedObject = (obj) => {
-  Object.keys(obj).forEach((k) => {
-    if (obj[k] == null) {
-      delete obj[k];
-    }
-  });
+    Object.keys(obj).forEach((k) => {
+        if (obj[k] == null) {
+            delete obj[k];
+        }
+    });
 
-  return obj;
+    return obj;
 };
 
 const updateNestedObjectParser = (obj) => {
-  const final = {};
-  Object.keys(obj).forEach((k) => {
-    if (typeof obj[k] === "object" && !Array.isArray()) {
-      const response = updateNestedObjectParser(obj[k]);
-      Object.keys(response).forEach((r) => {
-        final[`${k}.${r}`] = response[r];
-      });
-    } else {
-      final[k] = obj[k];
-    }
-  });
+    const final = {};
+    Object.keys(obj).forEach((k) => {
+        if (typeof obj[k] === "object" && !Array.isArray()) {
+            const response = updateNestedObjectParser(obj[k]);
+            Object.keys(response).forEach((r) => {
+                final[`${k}.${r}`] = response[r];
+            });
+        } else {
+            final[k] = obj[k];
+        }
+    });
 
-  return final;
+    return final;
 };
 
 const convertToObjectIdMongodb = (Id) => new Types.ObjectId(Id);
-
+const randomImageName = () => crypto.randomBytes(16).toString("hex");
 module.exports = {
-  getInfoData,
-  getSelectData,
-  unGetSelectData,
-  removeUnderfinedObject,
-  updateNestedObjectParser,
-  convertToObjectIdMongodb,
+    getInfoData,
+    getSelectData,
+    unGetSelectData,
+    removeUnderfinedObject,
+    updateNestedObjectParser,
+    convertToObjectIdMongodb,
+    randomImageName,
 };

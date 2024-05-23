@@ -7,6 +7,7 @@ const {
     uploadImageFromLocal,
     uploadImageFromLocalFiles,
     uploadImageFromLocalS3,
+    getImageUrlFromS3,
 } = require("../services/upload.service");
 class UploadController {
     uploadFile = async (req, res, next) => {
@@ -51,6 +52,16 @@ class UploadController {
             "Upload file from local use s3 successfully",
             await uploadImageFromLocalS3({
                 file,
+            })
+        );
+    };
+
+    getImageUrlFromS3 = async (req, res, next) => {
+        OK(
+            res,
+            "Get file from local use s3 successfully",
+            await getImageUrlFromS3({
+                ...req.body,
             })
         );
     };
